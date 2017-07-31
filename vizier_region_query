@@ -1,0 +1,303 @@
+from astroquery.vizier import Vizier
+from astropy.table import Table, Column
+from astropy.coordinates import Angle
+import numpy as np
+import csv
+import os
+
+angl = 10
+coord_files = ['coordother2011.csv','coordother2013.csv','coordother2014.csv','coordother2015.csv','coordother2016.csv','coordother2017.csv']
+pm_size = [416]
+hrm = "Python"
+os.chdir(hrm)
+rekt = os.getcwd()
+print(rekt)
+
+for pm_num in pm_size:
+    for coord_year in coord_files:
+        ra = []
+        dec = []
+        name = []
+        with open(coord_year, 'rt') as csvfile:
+            coordreader = csv.reader(csvfile)
+            for row in coordreader:
+                ','.join(row)
+                ra.append(row[1])
+                dec.append(row[2])
+                name.append(row[0])
+        del(ra[0])
+        del(dec[0])
+        del(name[0])
+
+        x = 0
+        while x < len(ra):
+            ra[x] = ra[x][:2] + 'h' + ra[x][3:]
+            ra[x] = ra[x][:5] + 'm' + ra[x][6:]
+            ra[x] = ra[x][:] + 's'
+            dec[x] = dec[x][:3] + 'd' + dec[x][4:]
+            dec[x] = dec[x][:6] + 'm' + dec[x][7:]
+            dec[x] = dec[x][:] + 's'
+            x += 1
+        #print(ra)
+        #print(dec)
+
+        #>10
+        u = 0
+        num = []
+        num2 = []
+        num3 = []
+        num4 = []
+        num5 = []
+        num6 = []
+        num7 = []
+        num8 = []
+        while u < len(ra):
+            ang = Angle((angl),unit='arcsec')
+            coord = Table()
+            coord['_RAJ2000'] = Column([ra[u]])
+            coord['_DEJ2000'] = Column([dec[u]])
+            #print(coord)
+            #print(ang)
+            x = 0
+            pmRA_num = ">" + str(pm_num)
+            pmDE_num = ">" + str(pm_num)
+            v = Vizier(column_filters={"pmRA" : pmRA_num,"pmDE" : pmDE_num})
+            result = v.query_region(coordinates=coord, radius=ang, catalog=["Gaia"])
+            #while x < len(result):
+            #    result[result.keys()[x]].pprint()
+            #    x += 1
+            x = 0
+            numm = 0
+            while x < len(result):
+                numm = numm + len(result[result.keys()[x]])
+                x += 1
+            num.append(numm)
+
+            #print(num)
+            #print(len(result[result.keys()[0]]))
+            u += 1
+
+        u = 0
+        while u < len(ra):
+            ang = Angle((angl),unit='arcsec')
+            coord = Table()
+            coord['_RAJ2000'] = Column([ra[u]])
+            coord['_DEJ2000'] = Column([dec[u]])
+            #print(coord)
+            #print(ang)
+            x = 0
+            pmRA_num = "<-" + str(pm_num)
+            pmDE_num = "<-" + str(pm_num)
+            v = Vizier(column_filters={"pmRA" : pmRA_num,"pmDE" : pmDE_num})
+            result = v.query_region(coordinates=coord, radius=ang, catalog=["Gaia"])
+            #while x < len(result):
+            #    result[result.keys()[x]].pprint()
+            #    x += 1
+            x = 0
+            numm = 0
+            while x < len(result):
+                numm = numm + len(result[result.keys()[x]])
+                x += 1
+            num2.append(numm)
+
+            #print(num)
+            #print(len(result[result.keys()[0]]))
+            u += 1
+
+        u = 0
+        while u < len(ra):
+            ang = Angle((angl),unit='arcsec')
+            coord = Table()
+            coord['_RAJ2000'] = Column([ra[u]])
+            coord['_DEJ2000'] = Column([dec[u]])
+            #print(coord)
+            #print(ang)
+            x = 0
+            pmRA_num = ">" + str(pm_num)
+            pmDE_num1 = "<" + str(pm_num)
+            pmDE_num2 = ">-" + str(pm_num)
+            v = Vizier(column_filters={"pmRA" : pmRA_num,"pmDE" : pmDE_num1,"pmDE" : pmDE_num2})
+            result = v.query_region(coordinates=coord, radius=ang, catalog=["Gaia"])
+            #while x < len(result):
+            #    result[result.keys()[x]].pprint()
+            #    x += 1
+            x = 0
+            numm = 0
+            while x < len(result):
+                numm = numm + len(result[result.keys()[x]])
+                x += 1
+            num3.append(numm)
+
+            #print(num)
+            #print(len(result[result.keys()[0]]))
+            u += 1
+
+        u = 0
+        while u < len(ra):
+            ang = Angle((angl),unit='arcsec')
+            coord = Table()
+            coord['_RAJ2000'] = Column([ra[u]])
+            coord['_DEJ2000'] = Column([dec[u]])
+            #print(coord)
+            #print(ang)
+            x = 0
+            pmRA_num1 = "<" + str(pm_num)
+            pmRA_num2 = ">-" + str(pm_num)
+            pmDE_num = ">" + str(pm_num)
+            v = Vizier(column_filters={"pmRA" : pmRA_num1,"pmDE" : pmDE_num,"pmRA" : pmRA_num2})
+            result = v.query_region(coordinates=coord, radius=ang, catalog=["Gaia"])
+            #while x < len(result):
+            #    result[result.keys()[x]].pprint()
+            #    x += 1
+            x = 0
+            numm = 0
+            while x < len(result):
+                numm = numm + len(result[result.keys()[x]])
+                x += 1
+            num4.append(numm)
+
+            #print(num)
+            #print(len(result[result.keys()[0]]))
+            u += 1
+
+        u = 0
+        while u < len(ra):
+            ang = Angle((angl),unit='arcsec')
+            coord = Table()
+            coord['_RAJ2000'] = Column([ra[u]])
+            coord['_DEJ2000'] = Column([dec[u]])
+            #print(coord)
+            #print(ang)
+            x = 0
+            pmRA_num = "<-" + str(pm_num)
+            pmDE_num1 = ">-" + str(pm_num)
+            pmDE_num2 = "<" + str(pm_num)
+            v = Vizier(column_filters={"pmRA" : pmRA_num,"pmDE" : pmDE_num1,"pmDE" : pmDE_num2})
+            result = v.query_region(coordinates=coord, radius=ang, catalog=["Gaia"])
+            #while x < len(result):
+            #    result[result.keys()[x]].pprint()
+            #    x += 1
+            x = 0
+            numm = 0
+            while x < len(result):
+                numm = numm + len(result[result.keys()[x]])
+                x += 1
+            num5.append(numm)
+
+            #print(num)
+            #print(len(result[result.keys()[0]]))
+            u += 1
+
+        u = 0
+        while u < len(ra):
+            ang = Angle((angl),unit='arcsec')
+            coord = Table()
+            coord['_RAJ2000'] = Column([ra[u]])
+            coord['_DEJ2000'] = Column([dec[u]])
+            #print(coord)
+            #print(ang)
+            x = 0
+            pmRA_num1 = ">-" + str(pm_num)
+            pmRA_num2 = "<" + str(pm_num)
+            pmDE_num = "<-" + str(pm_num)
+            v = Vizier(column_filters={"pmRA" : pmRA_num1,"pmDE" : pmDE_num,"pmRA" : pmRA_num2})
+            result = v.query_region(coordinates=coord, radius=ang, catalog=["Gaia"])
+            #while x < len(result):
+            #    result[result.keys()[x]].pprint()
+            #    x += 1
+            x = 0
+            numm = 0
+            while x < len(result):
+                numm = numm + len(result[result.keys()[x]])
+                x += 1
+            num6.append(numm)
+
+            #print(num)
+            #print(len(result[result.keys()[0]]))
+            u += 1
+
+        u = 0
+        while u < len(ra):
+            ang = Angle((angl),unit='arcsec')
+            coord = Table()
+            coord['_RAJ2000'] = Column([ra[u]])
+            coord['_DEJ2000'] = Column([dec[u]])
+            #print(coord)
+            #print(ang)
+            x = 0
+            pmRA_num = ">" + str(pm_num)
+            pmDE_num = "<-" + str(pm_num)
+            v = Vizier(column_filters={"pmRA" : pmRA_num,"pmDE" : pmDE_num})
+            result = v.query_region(coordinates=coord, radius=ang, catalog=["Gaia"])
+            #while x < len(result):
+            #    result[result.keys()[x]].pprint()
+            #    x += 1
+            x = 0
+            numm = 0
+            while x < len(result):
+                numm = numm + len(result[result.keys()[x]])
+                x += 1
+            num7.append(numm)
+
+            #print(num)
+            #print(len(result[result.keys()[0]]))
+            u += 1
+
+        u = 0
+        while u < len(ra):
+            ang = Angle((angl),unit='arcsec')
+            coord = Table()
+            coord['_RAJ2000'] = Column([ra[u]])
+            coord['_DEJ2000'] = Column([dec[u]])
+            #print(coord)
+            #print(ang)
+            x = 0
+            pmRA_num = "<-" + str(pm_num)
+            pmDE_num = ">" + str(pm_num)
+            v = Vizier(column_filters={"pmRA" : pmRA_num,"pmDE" : pmDE_num})
+            result = v.query_region(coordinates=coord, radius=ang, catalog=["Gaia"])
+            #while x < len(result):
+            #    result[result.keys()[x]].pprint()
+            #    x += 1
+            x = 0
+            numm = 0
+            while x < len(result):
+                numm = numm + len(result[result.keys()[x]])
+                x += 1
+            num8.append(numm)
+
+            #print(num)
+            #print(len(result[result.keys()[0]]))
+            u += 1
+
+        y = 0
+        t = 0
+        r = 0
+        w = 0
+        p = 0
+        k = 0
+        c = 0
+        j = 0
+        num_total = []
+        while y < len(num) and t < len(num2) and r < len(num3) and r < len(num4):
+            num_total.append(num[y] + num2[t] + num3[r] + num4[w] + num5[p] + num6[k] + num7[c] + num8[j])
+            #num_total.append(num[y])
+            if y < (len(num)+1):
+                y += 1
+            if t < (len(num2)+1):
+                t += 1
+            if r < (len(num3)+1):
+                r += 1
+            if w < (len(num4)+1):
+                w += 1
+            if p < (len(num5)+1):
+                p += 1
+            if k < (len(num6)+1):
+                k += 1
+            if c < (len(num7)+1):
+                c += 1
+            if j < (len(num8)+1):
+                j += 1
+        print(coord_year)
+        print(num_total)
+        print(name)
