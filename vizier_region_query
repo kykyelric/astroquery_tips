@@ -1,8 +1,10 @@
 #This is a comprehensive guide to using the VizieR region query from astroquery!
 #It allows you to query in mass, though it takes a while. (e.g. It took my laptop at least 8 hours to run 12,000 queries.)
+#This specific example walks through how to region query VizieR for the closest result with proper motion from the GAIA catalog.
 #YOU NEED:
 #-Files holding coordinates to query around in RA and DE format.
-#-My file also named each set of coordinates, so you'll occassionally see "name" in the code. 
+#-A radius (in arcsec) to query around. 
+#My file also named each set of coordinates, so you'll occassionally see "name" in the code. 
 #My coordinates were in the format 00:00:00.00 so I had to convert in the code to 00h00m00.00s. 
 #If your code is already in that format, simply comment out the while loop that I included (it is identified by a comment).
 #If you have questions on how to use the VizieR query, I can attempt to help you. Shoot me an email at starishfan@hotmail.com.
