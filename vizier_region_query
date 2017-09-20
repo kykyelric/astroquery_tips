@@ -1,3 +1,12 @@
+#This is a comprehensive guide to using the VizieR region query from astroquery!
+#It allows you to query in mass, though it takes a while. (e.g. It took my laptop at least 8 hours to run 12,000 queries.)
+#YOU NEED:
+#-Files holding coordinates to query around in RA and DE format.
+#-My file also named each set of coordinates, so you'll occassionally see "name" in the code. 
+#My coordinates were in the format 00:00:00.00 so I had to convert in the code to 00h00m00.00s. 
+#If your code is already in that format, simply comment out the while loop that I included (it is identified by a comment).
+#If you have questions on how to use the VizieR query, I can attempt to help you. Shoot me an email at starishfan@hotmail.com.
+
 from astroquery.vizier import Vizier
 from astropy.table import Table, Column
 from astropy.coordinates import Angle
@@ -5,19 +14,33 @@ import numpy as np
 import csv
 import os
 
-angl = 10
-coord_files = ['coordother2011.csv','coordother2013.csv','coordother2014.csv','coordother2015.csv','coordother2016.csv','coordother2017.csv']
-pm_size = [416]
-hrm = "Python"
-os.chdir(hrm)
-rekt = os.getcwd()
-print(rekt)
+#Establish the radius to query:
+angl = 20
+#List the files you are going to use (.csv format) that contain your coordinates in RA and DE:
+coord_files = ['coord2012.csv','coord2013.csv','coord2014.csv','coord2015.csv','coord2016.csv','coord2017.csv']
+#List the minimum proper motions of the query (this can be changed later to be a different variable than proper motion):
+#Basically, this is saying that the query will look for results with pm of at least 1mas/yr, then run the code again with 10mas/yr, then 100mas/yr.
+#If this doesn't make sense, it might later when you see the for loop.
+pm_size = [1,10,100]
+#NOTE! Your files must be in the same directory as your code. If they are not, change directories here:
+#hrm = "Python"
+#os.chdir(hrm)
+#rekt = os.getcwd()
+#print(rekt)
 
+#Establish empty lists that will store your results (I needed the distance from the coordinates and the proper motions in RA and DE.):
+r_hist = []
+pm_hist = []
+pm_hist2 = []
+
+#This for loop is if you have multiple minimum proper motion values that you want to check. It loops through the entire code with each.
 for pm_num in pm_size:
+    #This for loop is to loop through each file in the file list you created above.
     for coord_year in coord_files:
         ra = []
         dec = []
         name = []
+        #This opens the csv and obtains the coordinates. Change the row indexes to fit your csv. 
         with open(coord_year, 'rt') as csvfile:
             coordreader = csv.reader(csvfile)
             for row in coordreader:
@@ -25,279 +48,121 @@ for pm_num in pm_size:
                 ra.append(row[1])
                 dec.append(row[2])
                 name.append(row[0])
+        #Because I have headings, I deleted them here to just have the coordinates.
         del(ra[0])
         del(dec[0])
         del(name[0])
-
+        #My file had the coordinates with ":" instead of h/m/s. This while loop replaces them.
         x = 0
         while x < len(ra):
             ra[x] = ra[x][:2] + 'h' + ra[x][3:]
             ra[x] = ra[x][:5] + 'm' + ra[x][6:]
             ra[x] = ra[x][:] + 's'
+            #00h00m00.00s
             dec[x] = dec[x][:3] + 'd' + dec[x][4:]
             dec[x] = dec[x][:6] + 'm' + dec[x][7:]
             dec[x] = dec[x][:] + 's'
             x += 1
+        #You can check if the code has worked correctly by uncommenting these print statements.
         #print(ra)
         #print(dec)
-
-        #>10
+        
+        #Now on to the VizieR query itself. First establish some lists to put the data for the specific file in...
         u = 0
         num = []
-        num2 = []
-        num3 = []
-        num4 = []
-        num5 = []
-        num6 = []
-        num7 = []
-        num8 = []
+        Rlist = []
+        PMlist = []
+        PMlist2 = []
+        
+        #This while loop will go through each set of coordinates. 
         while u < len(ra):
+            #Establish some lists to put the data for the specific coordinates in...
+            tempRlist = []
+            tempPMlist = []
+            tempPMlist2 = []
+
+            #Create an Angle() object with your radius that VizieR will use.
             ang = Angle((angl),unit='arcsec')
+            #Create a Table() object with your coordinates that VizieR will also use.
             coord = Table()
             coord['_RAJ2000'] = Column([ra[u]])
             coord['_DEJ2000'] = Column([dec[u]])
+            #Check if the code is running correctly by uncommenting these print statements.
             #print(coord)
             #print(ang)
-            x = 0
-            pmRA_num = ">" + str(pm_num)
-            pmDE_num = ">" + str(pm_num)
-            v = Vizier(column_filters={"pmRA" : pmRA_num,"pmDE" : pmDE_num})
-            result = v.query_region(coordinates=coord, radius=ang, catalog=["Gaia"])
-            #while x < len(result):
-            #    result[result.keys()[x]].pprint()
-            #    x += 1
-            x = 0
-            numm = 0
-            while x < len(result):
-                numm = numm + len(result[result.keys()[x]])
-                x += 1
-            num.append(numm)
 
-            #print(num)
+            #This is the actual query.
+            #The proper motion parameters are specified in "column_filters". You can change this to other variables.
+            #Within "columns" you can specify what columns the query will show. We will later index this with the result object.
+            #vRA.query_region() is the actual code for the query. It takes the coordinates, radius, and optional catalogs.
+            #If you don't specify a catalog, it will go through all of them that pop up when it queries. 
+            pmRA_num = ">" + str(pm_num) + "or <-" + str(pm_num)
+            vRA = Vizier(columns=["pmRA","+_r","pmDE"], column_filters={"pmRA" : pmRA_num})
+            resultRA = vRA.query_region(coordinates=coord, radius=ang, catalog=["Gaia"])
+            
+            #This is just a repeat of above, but for proper motion in declination. 
+            pmDE_num = ">" + str(pm_num) + "or <-" + str(pm_num)
+            vDE = Vizier(columns=["pmDE","+_r","pmRA"], column_filters={"pmDE" : pmDE_num})
+            resultDE = vDE.query_region(coordinates=coord, radius=ang, catalog=["Gaia"])
+
+            #Here, we index the result object and assign the values we need to the lists we created for these coordinates. 
+            #I used if statements because I just wanted the first proper motion result. 
+            #You can simply index the result object without the if statements if you don't have any specifications.
+            if resultRA[resultRA.keys()[0]][0][2] < resultDE[resultDE.keys()[0]][0][2]:
+                tempPMlist = resultRA[resultRA.keys()[0]][0][1] #pmRA 
+                tempRlist = resultRA[resultRA.keys()[0]][0][2] #+_r
+                tempPMlist2 = resultRA[resultRA.keys()[0]][0][3] #pmDE
+                #This last index (1, 2, or 3) is the actual number from the query result itself.
+                #Yes, it's a hella long indexing process. Thank me later.
+                #Why is pmRA indexed first? Look at the order I listed the columns to be in on the query on line 100.
+                #If you have more than 3 columns, index accordingly. 
+            elif resultRA[resultRA.keys()[0]][0][2] > resultDE[resultDE.keys()[0]][0][2]:
+                tempPMlist2 = resultDE[resultDE.keys()[0]][0][1]
+                tempRlist = resultDE[resultDE.keys()[0]][0][2]
+                tempPMlist = resultDE[resultDE.keys()[0]][0][3]
+            elif resultRA[resultRA.keys()[0]][0][2] == resultDE[resultDE.keys()[0]][0][2]:
+                tempPMlist = resultRA[resultRA.keys()[0]][0][1]
+                tempRlist = resultRA[resultRA.keys()[0]][0][2]
+                tempPMlist2 = resultRA[resultRA.keys()[0]][0][3]
+            
+            #Here we append the coordinate values to the lists for the entire file.
+            Rlist.append(tempRlist)
+            PMlist.append(tempPMlist)
+            PMlist2.append(tempPMlist2)
+            #Uncomment this print statements to check if the code is working.
             #print(len(result[result.keys()[0]]))
             u += 1
-
-        u = 0
-        while u < len(ra):
-            ang = Angle((angl),unit='arcsec')
-            coord = Table()
-            coord['_RAJ2000'] = Column([ra[u]])
-            coord['_DEJ2000'] = Column([dec[u]])
-            #print(coord)
-            #print(ang)
-            x = 0
-            pmRA_num = "<-" + str(pm_num)
-            pmDE_num = "<-" + str(pm_num)
-            v = Vizier(column_filters={"pmRA" : pmRA_num,"pmDE" : pmDE_num})
-            result = v.query_region(coordinates=coord, radius=ang, catalog=["Gaia"])
-            #while x < len(result):
-            #    result[result.keys()[x]].pprint()
-            #    x += 1
-            x = 0
-            numm = 0
-            while x < len(result):
-                numm = numm + len(result[result.keys()[x]])
-                x += 1
-            num2.append(numm)
-
-            #print(num)
-            #print(len(result[result.keys()[0]]))
-            u += 1
-
-        u = 0
-        while u < len(ra):
-            ang = Angle((angl),unit='arcsec')
-            coord = Table()
-            coord['_RAJ2000'] = Column([ra[u]])
-            coord['_DEJ2000'] = Column([dec[u]])
-            #print(coord)
-            #print(ang)
-            x = 0
-            pmRA_num = ">" + str(pm_num)
-            pmDE_num1 = "<" + str(pm_num)
-            pmDE_num2 = ">-" + str(pm_num)
-            v = Vizier(column_filters={"pmRA" : pmRA_num,"pmDE" : pmDE_num1,"pmDE" : pmDE_num2})
-            result = v.query_region(coordinates=coord, radius=ang, catalog=["Gaia"])
-            #while x < len(result):
-            #    result[result.keys()[x]].pprint()
-            #    x += 1
-            x = 0
-            numm = 0
-            while x < len(result):
-                numm = numm + len(result[result.keys()[x]])
-                x += 1
-            num3.append(numm)
-
-            #print(num)
-            #print(len(result[result.keys()[0]]))
-            u += 1
-
-        u = 0
-        while u < len(ra):
-            ang = Angle((angl),unit='arcsec')
-            coord = Table()
-            coord['_RAJ2000'] = Column([ra[u]])
-            coord['_DEJ2000'] = Column([dec[u]])
-            #print(coord)
-            #print(ang)
-            x = 0
-            pmRA_num1 = "<" + str(pm_num)
-            pmRA_num2 = ">-" + str(pm_num)
-            pmDE_num = ">" + str(pm_num)
-            v = Vizier(column_filters={"pmRA" : pmRA_num1,"pmDE" : pmDE_num,"pmRA" : pmRA_num2})
-            result = v.query_region(coordinates=coord, radius=ang, catalog=["Gaia"])
-            #while x < len(result):
-            #    result[result.keys()[x]].pprint()
-            #    x += 1
-            x = 0
-            numm = 0
-            while x < len(result):
-                numm = numm + len(result[result.keys()[x]])
-                x += 1
-            num4.append(numm)
-
-            #print(num)
-            #print(len(result[result.keys()[0]]))
-            u += 1
-
-        u = 0
-        while u < len(ra):
-            ang = Angle((angl),unit='arcsec')
-            coord = Table()
-            coord['_RAJ2000'] = Column([ra[u]])
-            coord['_DEJ2000'] = Column([dec[u]])
-            #print(coord)
-            #print(ang)
-            x = 0
-            pmRA_num = "<-" + str(pm_num)
-            pmDE_num1 = ">-" + str(pm_num)
-            pmDE_num2 = "<" + str(pm_num)
-            v = Vizier(column_filters={"pmRA" : pmRA_num,"pmDE" : pmDE_num1,"pmDE" : pmDE_num2})
-            result = v.query_region(coordinates=coord, radius=ang, catalog=["Gaia"])
-            #while x < len(result):
-            #    result[result.keys()[x]].pprint()
-            #    x += 1
-            x = 0
-            numm = 0
-            while x < len(result):
-                numm = numm + len(result[result.keys()[x]])
-                x += 1
-            num5.append(numm)
-
-            #print(num)
-            #print(len(result[result.keys()[0]]))
-            u += 1
-
-        u = 0
-        while u < len(ra):
-            ang = Angle((angl),unit='arcsec')
-            coord = Table()
-            coord['_RAJ2000'] = Column([ra[u]])
-            coord['_DEJ2000'] = Column([dec[u]])
-            #print(coord)
-            #print(ang)
-            x = 0
-            pmRA_num1 = ">-" + str(pm_num)
-            pmRA_num2 = "<" + str(pm_num)
-            pmDE_num = "<-" + str(pm_num)
-            v = Vizier(column_filters={"pmRA" : pmRA_num1,"pmDE" : pmDE_num,"pmRA" : pmRA_num2})
-            result = v.query_region(coordinates=coord, radius=ang, catalog=["Gaia"])
-            #while x < len(result):
-            #    result[result.keys()[x]].pprint()
-            #    x += 1
-            x = 0
-            numm = 0
-            while x < len(result):
-                numm = numm + len(result[result.keys()[x]])
-                x += 1
-            num6.append(numm)
-
-            #print(num)
-            #print(len(result[result.keys()[0]]))
-            u += 1
-
-        u = 0
-        while u < len(ra):
-            ang = Angle((angl),unit='arcsec')
-            coord = Table()
-            coord['_RAJ2000'] = Column([ra[u]])
-            coord['_DEJ2000'] = Column([dec[u]])
-            #print(coord)
-            #print(ang)
-            x = 0
-            pmRA_num = ">" + str(pm_num)
-            pmDE_num = "<-" + str(pm_num)
-            v = Vizier(column_filters={"pmRA" : pmRA_num,"pmDE" : pmDE_num})
-            result = v.query_region(coordinates=coord, radius=ang, catalog=["Gaia"])
-            #while x < len(result):
-            #    result[result.keys()[x]].pprint()
-            #    x += 1
-            x = 0
-            numm = 0
-            while x < len(result):
-                numm = numm + len(result[result.keys()[x]])
-                x += 1
-            num7.append(numm)
-
-            #print(num)
-            #print(len(result[result.keys()[0]]))
-            u += 1
-
-        u = 0
-        while u < len(ra):
-            ang = Angle((angl),unit='arcsec')
-            coord = Table()
-            coord['_RAJ2000'] = Column([ra[u]])
-            coord['_DEJ2000'] = Column([dec[u]])
-            #print(coord)
-            #print(ang)
-            x = 0
-            pmRA_num = "<-" + str(pm_num)
-            pmDE_num = ">" + str(pm_num)
-            v = Vizier(column_filters={"pmRA" : pmRA_num,"pmDE" : pmDE_num})
-            result = v.query_region(coordinates=coord, radius=ang, catalog=["Gaia"])
-            #while x < len(result):
-            #    result[result.keys()[x]].pprint()
-            #    x += 1
-            x = 0
-            numm = 0
-            while x < len(result):
-                numm = numm + len(result[result.keys()[x]])
-                x += 1
-            num8.append(numm)
-
-            #print(num)
-            #print(len(result[result.keys()[0]]))
-            u += 1
-
-        y = 0
-        t = 0
-        r = 0
-        w = 0
-        p = 0
-        k = 0
-        c = 0
-        j = 0
-        num_total = []
-        while y < len(num) and t < len(num2) and r < len(num3) and r < len(num4):
-            num_total.append(num[y] + num2[t] + num3[r] + num4[w] + num5[p] + num6[k] + num7[c] + num8[j])
-            #num_total.append(num[y])
-            if y < (len(num)+1):
-                y += 1
-            if t < (len(num2)+1):
-                t += 1
-            if r < (len(num3)+1):
-                r += 1
-            if w < (len(num4)+1):
-                w += 1
-            if p < (len(num5)+1):
-                p += 1
-            if k < (len(num6)+1):
-                k += 1
-            if c < (len(num7)+1):
-                c += 1
-            if j < (len(num8)+1):
-                j += 1
+        
+        #This prints out results by individual file.
+        #I preferred results in dictionary format, which is what the for loop accomplishes.
         print(coord_year)
-        print(num_total)
-        print(name)
+        pairs = {}
+        t = 0
+        for y in Rlist:
+            pairs.update({name[t]:y})
+            t += 1
+        print(pairs)
+        print(Rlist)
+        print(PMlist)
+        print(PMlist2)
+        #This appends the individual file results to the list that holds all results.
+        r_hist.append(Rlist[:])
+        pm_hist.append(PMlist[:])
+        pm_hist2.append(PMlist2[:])
+
+#This prints all the results!
+print('_r:', r_hist)
+pm_hist_ = [item for sublist in pm_hist for item in sublist]
+print('RA:', pm_hist_)
+pm_hist2_ = [item for sublist in pm_hist2 for item in sublist]
+print('DE:', pm_hist2_)
+
+#I wanted to find the proper motion based on the RA and DE proper motions, so I calculated it here. 
+#If you aren't using proper motion, simply comment this section out.
+pm_total = []
+x = 0
+while x < len(pm_hist_):
+    pm_total.append((pm_hist_[x]**2+pm_hist2_[x]**2)**(0.5))
+    x += 1
+print('Totals:', pm_total)
+
