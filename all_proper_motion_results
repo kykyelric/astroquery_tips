@@ -1,0 +1,123 @@
+#The code for this is the same as the walkthrough for closest proper motion result except that it prints out all results instead of just the closest.
+#It'll give you the distance from the coordinates (_r) as well as the proper motion.
+#For a comprehensive guide on the code, take a look at the file for closest proper motion results. 
+#Otherwise, enjoy! 
+
+from astroquery.vizier import Vizier
+from astropy.table import Table, Column
+from astropy.coordinates import Angle
+import numpy as np
+import csv
+import os
+
+angl = 10
+coord_files = ['coordother2011.csv','coordother2012.csv','coordother2013.csv','coordother2014.csv','coordother2015.csv','coordother2016.csv','coordother2017.csv']
+#coord_files = ['coord2012.csv','coord2013.csv','coord2014.csv','coord2015.csv','coord2016.csv','coord2017.csv']
+pm_set = [0.1]
+hrm = "Python"
+#os.chdir(hrm)
+rekt = os.getcwd()
+print(rekt)
+num_sum = []
+num_ave = []
+Rlist = []
+PMlist = []
+
+for pm_num in pm_set:
+    for coord_year in coord_files:
+        tempRlistyear = []
+        tempPMlistyear = []
+        ra = []
+        dec = []
+        name = []
+        with open(coord_year, 'rt') as csvfile:
+            coordreader = csv.reader(csvfile)
+            for row in coordreader:
+                ','.join(row)
+                ra.append(row[1])
+                dec.append(row[2])
+                name.append(row[0])
+        del(ra[0])
+        del(dec[0])
+        del(name[0])
+
+        x = 0
+        while x < len(ra):
+            ra[x] = ra[x][:2] + 'h' + ra[x][3:]
+            ra[x] = ra[x][:5] + 'm' + ra[x][6:]
+            ra[x] = ra[x][:] + 's'
+            dec[x] = dec[x][:3] + 'd' + dec[x][4:]
+            dec[x] = dec[x][:6] + 'm' + dec[x][7:]
+            dec[x] = dec[x][:] + 's'
+            x += 1
+        #print(ra)
+        #print(dec)
+
+        u = 0
+        num = []
+
+        while u < len(ra):
+            tempRlist = []
+            tempPMlist = []
+            numm = 0
+            ang = Angle((angl),unit='arcsec')
+            coord = Table()
+            coord['_RAJ2000'] = Column([ra[u]])
+            coord['_DEJ2000'] = Column([dec[u]])
+            #print(coord)
+            #print(ang)
+
+            x = 0
+            pmRA_num = ">" + str(pm_num) + "or <-" + str(pm_num)
+            v = Vizier(columns=["pmRA","+_r","pmDE"], column_filters={"pmRA" : pmRA_num})
+            result = v.query_region(coordinates=coord, radius=ang, catalog=["Gaia"])
+
+            while x < 1:
+                if result == []:
+                    break
+                temp = result[result.keys()[x]] #table
+                tempRA = temp['_r'] #column containing number
+                tempPMRA = temp['pmRA']
+                tempPMDE = temp['pmDE']
+                #print(tempRA)
+                #print(temp[0])
+                p = 0
+                while p < len(tempRA):
+                    if tempRA[p] not in tempRlist:
+                        tempRlist.append(tempRA[p])
+                        pm = (tempPMRA[p]**2+tempPMDE[p]**2)**.5
+                        tempPMlist.append(pm)
+                        numm += 1
+                    p += 1
+                x += 1
+                
+            num.append(numm)
+            tempRlistyear.append(tempRlist)
+            tempPMlistyear.append(tempPMlist)
+            #print(numm)
+            #print(num)
+            #print(len(result[result.keys()[0]]))
+            u += 1
+
+        y = 0
+        num_total = []
+        while y < len(num):
+            num_total.append(num[y])
+            if y < (len(num)+1):
+                y += 1
+        print(coord_year)
+        num_sum.append(sum(num_total))
+        num_ave.append(sum(num_total)/len(num_total))
+        pairs = {}
+        t = 0
+        for y in num_total:
+            pairs.update({name[t]:y})
+            t += 1
+        print(pairs)
+        print(tempRlistyear)
+        Rlist.append(tempRlistyear)
+        PMlist.append(tempPMlistyear)
+    #print(num_sum)
+    #print(num_ave)
+print(Rlist)
+print(PMlist)
