@@ -115,7 +115,6 @@ for pm_num in pm_size:
                 tempRlist = resultRA[resultRA.keys()[0]][0][2] #+_r
                 tempPMlist2 = resultRA[resultRA.keys()[0]][0][3] #pmDE
                 #This last index (1, 2, or 3) is the actual number from the query result itself.
-                #Yes, it's a hella long indexing process. Thank me later.
                 #Why is pmRA indexed first? Look at the order I listed the columns to be in on the query on line 100.
                 #If you have more than 3 columns, index accordingly. 
             elif resultRA[resultRA.keys()[0]][0][2] > resultDE[resultDE.keys()[0]][0][2]:
