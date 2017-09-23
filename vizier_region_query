@@ -1,5 +1,5 @@
 #This is a comprehensive guide to using the VizieR region query from astroquery!
-#It allows you to query in mass, though it takes a while. (e.g. It took my laptop at least 8 hours to run 12,000 queries.)
+#It allows you to query lots of coordinates, though it takes a while. (e.g. It took my laptop at least 8 hours to run 12,000 queries.)
 #This specific example walks through how to region query VizieR for the closest result with proper motion from the GAIA catalog.
 #YOU NEED:
 #-Files holding coordinates to query around in RA and DE format.
